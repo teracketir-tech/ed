@@ -1,0 +1,54 @@
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Toaster } from "sonner";
+import { AppSidebar } from "./sidebar";
+import { SidebarTrigger } from "../ui/sidebar";
+import AppProvider from "@/context/AppContext";
+import { isAuthPage, pageTitle, pathName } from "@/lib/utils";
+import { ArrowRight } from "lucide-react";
+import { usePageTitle } from "@/hooks/use-page-title";
+import { trackLocation } from "@/lib/navigation";
+
+export default function Layout() {
+    usePageTitle();
+
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    // keep the previous history entry available to navigateAfterSave (lib/navigation)
+    useEffect(() => {
+        trackLocation({ pathname: location.pathname, search: location.search });
+    }, [location.pathname, location.search]);
+
+    const isFactorPage = pathName() === "/order/:id/factor";
+    const isHomePage = location.pathname === "/" || pageTitle() === "داشبورد";
+
+    return (
+        <AppProvider>
+            {!isAuthPage() && !isFactorPage && <AppSidebar />}
+            <Toaster position="top-center" />
+
+            <main className="w-full flex-1 min-w-0">
+                {!isAuthPage() && !isFactorPage && (
+                    <div className="sticky top-0 z-50 hide_print">
+                        <div className="relative flex items-center bg-sidebar py-[1.3rem]">
+                            <SidebarTrigger className="absolute -right-3.5 z-50" />
+                            <div className="flex items-center gap-3 mr-8">
+                                {!isHomePage && (
+                                    <button className="cursor-pointer" onClick={() => navigate(-1)}>
+                                        <ArrowRight className="size-4.5 mt-1" />
+                                    </button>
+                                )}
+                                <p className="font-bold">{pageTitle()}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="p-5">
+                    <Outlet />
+                </div>
+            </main>
+        </AppProvider>
+    );
+}
